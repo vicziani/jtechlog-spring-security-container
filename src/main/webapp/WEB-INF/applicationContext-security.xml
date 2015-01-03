@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <global-method-security />
+ 
+    <http entry-point-ref="entryPoint" auto-config="false">
+        <intercept-url pattern="/index.html" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+        <intercept-url pattern="/user.html" access="ROLE_USER,ROLE_ADMIN" />
+        <intercept-url pattern="/admin.html" access="ROLE_ADMIN" />
+        <custom-filter position="PRE_AUTH_FILTER" ref="preAuthFilter" />
+    </http>
+ 
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider ref="authenticationProvider" />
+    </authentication-manager>
+
+    <beans:bean id="entryPoint"
+          class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint"/>
+
+    <beans:bean id="authenticationProvider"
+                class="org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider">
+        <beans:property name="preAuthenticatedUserDetailsService" ref="userDetailsService">
+        </beans:property>
+    </beans:bean>
+
+    <beans:bean id="userDetailsService" class="jtechlog.springsecurity.service.JpaAuthenticationUserDetailsService"/>
+
+    <beans:bean id="preAuthFilter" class="org.springframework.security.web.authentication.preauth.j2ee.J2eePreAuthenticatedProcessingFilter">
+        <beans:property name="authenticationManager" ref="authenticationManager"/>
+        <beans:property name="authenticationDetailsSource">
+            <beans:bean class="org.springframework.security.web.authentication.preauth.j2ee.J2eeBasedPreAuthenticatedWebAuthenticationDetailsSource">
+                <beans:property name="mappableRolesRetriever">
+                    <beans:bean class="org.springframework.security.web.authentication.preauth.j2ee.WebXmlMappableAttributesRetriever" />
+                </beans:property>
+                <beans:property name="userRoles2GrantedAuthoritiesMapper">
+                    <beans:bean class="org.springframework.security.core.authority.mapping.SimpleAttributes2GrantedAuthoritiesMapper">
+                        <beans:property name="convertAttributeToUpperCase" value="true"/>
+                    </beans:bean>
+                </beans:property>
+            </beans:bean>
+        </beans:property>
+    </beans:bean>
+</beans:beans>
